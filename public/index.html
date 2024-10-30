@@ -1,38 +1,45 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="initial-scale=1.0; maximum-scale=1.0; minimum-scale=1.0; user-scalable=no;" />
     <title>나이스</title>
     <style>
         @font-face {
             font-family: gulimwoff;
             src: url(GulimChe.woff2);
         }
+
         @media (prefers-color-scheme: light) {
             body {
                 background: white;
                 color: black;
             }
+
             button {
                 background-color: #4CAF50;
                 color: black;
             }
         }
+
         @media (prefers-color-scheme: dark) {
             body {
                 background: black;
                 color: white;
             }
+
             button {
                 background-color: rgb(236, 193, 0);
                 color: white;
             }
+
             .nameinput {
                 background-color: #252525;
                 color: white;
             }
         }
+
         body {
             font-family: 'gulimwoff';
             text-align: center;
@@ -92,7 +99,7 @@
             <img onclick='imgtri(1)' id='p1'>
             <img onclick='imgtri(2)' id='p2'>
         </div>
-        <div style="width: 100%; height: 2vw;">
+        <div style="width: 100%; height: 2vw; margin-bottom: 2vw;">
             <h1 id="prompt">문을 하나 선택해주세요</h1>
         </div>
         <div class="btnd">
@@ -123,24 +130,36 @@
         </div>
     </div>
     <script>
+        document.documentElement.addEventListener('touchstart', function (event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, false); lastTouchEnd = 0;
+        document.documentElement.addEventListener('touchend', function (event) {
+            var now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
         const initTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
         let n = 0, b_;
         reset()
         function reset() {
-                n = 0
-                c = Math.floor(Math.random() * 3);
-                document.getElementById('b0').disabled = false;
-                document.getElementById('b1').disabled = false;
-                document.getElementById('b2').disabled = false;
-                document.getElementById('p0').src = initTheme + ".closed.webp";
-                document.getElementById('p1').src = initTheme + ".closed.webp";
-                document.getElementById('p2').src = initTheme + ".closed.webp";
+            n = 0
+            c = Math.floor(Math.random() * 3);
+            document.getElementById('b0').disabled = false;
+            document.getElementById('b1').disabled = false;
+            document.getElementById('b2').disabled = false;
+            document.getElementById('p0').src = initTheme + ".closed.webp";
+            document.getElementById('p1').src = initTheme + ".closed.webp";
+            document.getElementById('p2').src = initTheme + ".closed.webp";
         }
         async function fetchData() {
             const tableBody = document.querySelector('#data-table tbody');
             tableBody.innerHTML = '';
             const xhr = new XMLHttpRequest();
-            xhr.open('GET', 'https://app-wispy-shadow-6042.fly.dev/data', true); // 포트를 3000으로 설정
+            xhr.open('GET', '/data', true);
             xhr.onload = function () {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     const data = JSON.parse(xhr.responseText);
@@ -229,77 +248,51 @@
             new Audio(file).play();
         }
 
-        function updateOrAddScore(h) {
-
+        async function updateOrAddScore(resultType) {
             const username = document.getElementById('name').value.replace(/\s+/g, '');
 
-            async function saveData(leaderboardData) {
-                try {
-                    const response = await fetch('/save', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(leaderboardData)
-                    });
+            try {
+                const response = await fetch('/data');
+                const leaderboardData = await response.json();
 
-                    if (!response.ok) {
-                        throw new Error('데이터 저장 실패');
-                    }
-                } catch (error) {
-                    console.error('서버 오류:', error);
+                let entry = leaderboardData.find(item => item.name === username);
+
+                if (!entry) {
+                    entry = {
+                        name: username,
+                        totalcount: 1,
+                        cwin: 0,
+                        nwin: 0,
+                        cplay: 0,
+                        nplay: 0,
+                        ptime: new Date().toISOString().slice(5, 19).replace('T', ' ')
+                    };
+                    leaderboardData.push(entry);
+                } else {
+                    entry.totalcount++;
+                    entry.ptime = new Date().toISOString().slice(5, 19).replace('T', ' ');
                 }
-            }
 
-            fetch('/data')
-                .then(response => response.json())
-                .then(leaderboardData => {
-                    const entry = leaderboardData.find(item => item.name === username);
-                    const tentry = leaderboardData.find(item => item.total === 1);
-                    if (entry) {
-                        //업데이트
-                        tentry.totalcount++;
-                        entry.totalcount++;
-                        entry.ptime = new Date().toISOString().slice(5, 19).replace('T', ' ');
-                        switch (h) {
-                            case 0://바꾸고 이김
-                                entry.cplay++;
-                                entry.cwin++;
-                                tentry.cplay++;
-                                tentry.cwin++;
-                                break;
-                            case 1: //바꾸고 짐
-                                entry.cplay++;
-                                tentry.cplay++;
-                                break;
-                            case 2://안바꾸고 이김
-                                entry.nplay++;
-                                entry.nwin++;
-                                tentry.nplay++;
-                                tentry.nwin++;
-                                break;
-                            case 3://안바꾸고 짐
-                                entry.nplay++;
-                                tentry.nplay++;
-                                break;
-                        }
-                    } else {
-                        //새로만들기
-                        leaderboardData.push({
-                            name: username,
-                            totalcount: 1,
-                            nwin: 0,
-                            cwin: 0,
-                            nplay: 0,
-                            cplay: 0,
-                            ptime: new Date().toISOString().slice(5, 19).replace('T', ' ')
-                        });
-                    }
-                    saveData(leaderboardData);
-                })
-                .catch(err => {
-                    console.error('파일 읽기 오류:', err);
+                if (resultType === 0) {  // 바꾸고 이김
+                    entry.cplay++;
+                    entry.cwin++;
+                } else if (resultType === 1) {  // 바꾸고 짐
+                    entry.cplay++;
+                } else if (resultType === 2) {  // 안바꾸고 이김
+                    entry.nplay++;
+                    entry.nwin++;
+                } else if (resultType === 3) {  // 안바꾸고 짐
+                    entry.nplay++;
+                }
+
+                await fetch('/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(leaderboardData)
                 });
+            } catch (error) {
+                console.error('데이터 업데이트 오류:', error);
+            }
         }
     </script>
 </body>
