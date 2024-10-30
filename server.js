@@ -1,15 +1,18 @@
 const express = require('express');
 const { Pool } = require('pg');
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 3000;
+
 
 app.use(express.json());
 
 // PostgreSQL 연결 설정 (Koyeb의 PostgreSQL URI와 맞춰 수정)
+
 const pool = new Pool({
-    connectionString: 'postgres://koyeb-adm:V8TYM6OkoxLS@ep-morning-river-a136vtvj.ap-southeast-1.pg.koyeb.app/koyebdb', // 실제 URI로 교체하세요
-    ssl: { rejectUnauthorized: false } // SSL을 사용하는 경우 추가
+    connectionString: process.env.DATABASE_URL || "postgres://koyeb-adm:V8TYM6OkoxLS@ep-morning-river-a136vtvj.ap-southeast-1.pg.koyeb.app/koyebdb", // Koyeb 환경 변수 사용
+    ssl: { rejectUnauthorized: false }
 });
+
 
 // 테이블 생성 쿼리 실행 (처음 실행 시 한 번만 필요)
 const createTableQuery = `
@@ -70,6 +73,6 @@ app.post('/save', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
