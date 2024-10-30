@@ -130,6 +130,7 @@
         </div>
         <div id="savedResults" class="hidden">
             <h2 style="font-size: 5vw;">리더보드</h2>
+            <h2 style="font-size: 3vw; margin-bottom: 1vw; margin-top: 1vw;" id="totalCountDisplay"></h2>
             <table id="data-table" style="font-size: 2.75vw;">
                 <thead>
                     <tr>
@@ -185,8 +186,8 @@
                         row.innerHTML = `
                     <td>${item.name}</td>
                     <td>${item.totalcount}</td>
-                    <td>${Math.round(item.cwin / item.cplay * 100) + '%'}</td>
-                    <td>${Math.round(item.nwin / item.nplay * 100) + '%'}</td>
+                    <td>${Math.round(item.cwin / item.totalcount * 100) + '%'}</td>
+                    <td>${Math.round(item.nwin / item.toIalcount * 100) + '%'}</td>
                     <td>${item.ptime}</td>
                 `;
                         tableBody.appendChild(row);
@@ -234,22 +235,17 @@
                             document.getElementById('p' + b).src = initTheme + ".car.webp";
                             document.getElementById("prompt").innerHTML = "축하합니다! 냉큼 사탕받으로 1-6으로 ㄱㄱ"
                             playAudio('cor.mp3');
-                            updateOrAddScore(3);
-                            break;
-                        case (b != c && b == b_): // 안 바꾸고 짐
-                            updateOrAddScore(2);
-                            document.getElementById('p' + b).src = initTheme + ".goat.webp";
-                            document.getElementById("prompt").innerHTML = "아숩노ㅋ 한번더 ㄱ?"
-                            playAudio('inc.mp3')
-                            break;
-                        case (b != c && b != b_): // 바꾸고 짐
-                            document.getElementById('p' + b).src = initTheme + ".goat.webp";
-                            document.getElementById("prompt").innerHTML = "아숩노ㅋ 한번더 ㄱ?"
-                            playAudio('inc.mp3')
                             updateOrAddScore(1);
+                            break;
+                        case (b != c): // 안 바꾸고 짐
+                            updateOrAddScore();
+                            document.getElementById('p' + b).src = initTheme + ".goat.webp";
+                            document.getElementById("prompt").innerHTML = "아숩노ㅋ 한번더 ㄱ?"
+                            playAudio('inc.mp3')
                             break;
 
                     }
+                    fetchDataAndCalculateTotalCount()
                 } else if (n <= 3) {
                     reset()
                 }
@@ -267,11 +263,9 @@
 
         async function updateOrAddScore(resultType) {
             const username = document.getElementById('name').value.replace(/\s+/g, '');
-
             try {
                 const response = await fetch('/data');
                 const leaderboardData = await response.json();
-
                 let entry = leaderboardData.find(item => item.name === username);
 
                 if (!entry) {
@@ -280,8 +274,6 @@
                         totalcount: 1,
                         cwin: 0,
                         nwin: 0,
-                        cplay: 0,
-                        nplay: 0,
                         ptime: new Date().toISOString().slice(5, 19).replace('T', ' ')
                     };
                     leaderboardData.push(entry);
@@ -291,15 +283,9 @@
                 }
 
                 if (resultType === 0) {  // 바꾸고 이김
-                    entry.cplay++;
                     entry.cwin++;
-                } else if (resultType === 1) {  // 바꾸고 짐
-                    entry.cplay++;
-                } else if (resultType === 2) {  // 안바꾸고 이김
-                    entry.nplay++;
+                } else if (resultType === 1) {  // 안바꾸고 이김
                     entry.nwin++;
-                } else if (resultType === 3) {  // 안바꾸고 짐
-                    entry.nplay++;
                 }
 
                 await fetch('/save', {
@@ -311,6 +297,17 @@
                 console.error('데이터 업데이트 오류:', error);
             }
         }
+        async function fetchDataAndCalculateTotalCount() {
+            const response = await fetch('/data');
+            const data = await response.json();
+            const t_totalcount = data.reduce((sum, item) => sum + (item.totalcount || 0), 0);
+            const t_cwin = data.reduce((sum, item) => sum + (item.cwin || 0), 0);
+            const t_nwin = data.reduce((sum, item) => sum + (item.nwin || 0), 0);
+            document.getElementById('totalCountDisplay').innerText = `총 플레이 수: ${totalCount}&nbsp;평균적인 안 바꿨을때 승률: ${Math.round(t_cwin / t_totalcount * 100) + '%'}&nbsp;평균적인 바꿨을때 승률: ${Math.round(t_nwin / t_totalcount * 100) + '%'}`;
+        }
+
+        // 페이지 로드 시 데이터 가져오기 및 총합 계산
+        window.onload = fetchDataAndCalculateTotalCount;
     </script>
 </body>
 
