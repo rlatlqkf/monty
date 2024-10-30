@@ -44,8 +44,8 @@ app.get('/data', async (req, res) => {
     }
 });
 
-// POST /save - 데이터 저장 및 업데이트
 app.post('/save', async (req, res) => {
+    console.log("Received data:", req.body); // 요청 데이터 로그
     const { name, totalcount, cwin, nwin, cplay, nplay } = req.body;
 
     try {
@@ -70,10 +70,12 @@ app.post('/save', async (req, res) => {
 
         res.send('Data successfully saved');
     } catch (err) {
-        console.error('Error saving data:', err);
+        console.error('Error saving data:', err.message);
+        console.error(err.stack);
         res.status(500).send('Error saving data');
     }
 });
+
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
