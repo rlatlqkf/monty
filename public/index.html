@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나이스</title>
+    <style>
+        @font-face {
+            font-family: gulimwoff;
+            src: url(GulimChe.woff2);
+        }
+        @media (prefers-color-scheme: light) {
+            body {
+                background: white;
+                color: black;
+            }
+            button {
+                background-color: #4CAF50;
+                color: black;
+            }
+        }
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: black;
+                color: white;
+            }
+            button {
+                background-color: rgb(236, 193, 0);
+                color: white;
+            }
+            .nameinput {
+                background-color: #252525;
+                color: white;
+            }
+        }
+        body {
+            font-family: 'gulimwoff';
+            text-align: center;
+            overflow-x: hidden;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+        }
+
+        img {
+            width: 32%;
+            height: 32%;
+        }
+
+        .btnd {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 20vh;
+        }
+
+        button {
+            font-family: 'gulimwoff';
+            width: 30vw;
+            aspect-ratio: 1;
+            font-size: 8vw;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .nameinput {
+            font-family: 'gulimwoff';
+            display: inline-block;
+            margin-left: 10px;
+            width: 50%;
+            height: 7vw;
+            font-size: 5vw;
+            padding: 5px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-bottom: 50px;
+            text-align: center;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 style="font-size: 7vw;">몬티홀 문제 체험하기!</h1>
+        <input type="text" id='name' placeholder="학번이랑 이름 적기" class="nameinput">
+        <div class="imgd">
+            <img onclick='imgtri(0)' id='p0'>
+            <img onclick='imgtri(1)' id='p1'>
+            <img onclick='imgtri(2)' id='p2'>
+        </div>
+        <div style="width: 100%; height: 2vw;">
+            <h1 id="prompt">문을 하나 선택해주세요</h1>
+        </div>
+        <div class="btnd">
+            <button onclick='trigged(0)' id='b0'>문 1</button>
+            <button onclick='trigged(1)' id='b1'>문 2</button>
+            <button onclick='trigged(2)' id='b2'>문 3</button>
+        </div>
+        <div id="gameResult"></div>
+        <div id="result">
+            <p id="finalResult"></p>
+        </div>
+        <div id="savedResults" class="hidden">
+            <h2 style="font-size: 5vw;">리더보드</h2>
+            <table id="data-table" style="font-size: 2.75vw;">
+                <thead>
+                    <tr>
+                        <th>이름</th>
+                        <th>총 플레이 수</th>
+                        <th>바꿨을때 승률</th>
+                        <th>안바꿨을때 승률</th>
+                        <th>날짜</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 데이터가 여기에 삽입됩니다. -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        const initTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        let n = 0, b_;
+        reset()
+        function reset() {
+                n = 0
+                c = Math.floor(Math.random() * 3);
+                document.getElementById('b0').disabled = false;
+                document.getElementById('b1').disabled = false;
+                document.getElementById('b2').disabled = false;
+                document.getElementById('p0').src = initTheme + ".closed.webp";
+                document.getElementById('p1').src = initTheme + ".closed.webp";
+                document.getElementById('p2').src = initTheme + ".closed.webp";
+        }
+        async function fetchData() {
+            const tableBody = document.querySelector('#data-table tbody');
+            tableBody.innerHTML = '';
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'https://app-wispy-shadow-6042.fly.dev/data', true); // 포트를 3000으로 설정
+            xhr.onload = function () {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    const data = JSON.parse(xhr.responseText);
+                    data.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.totalcount}</td>
+                    <td>${Math.round(item.cwin / item.cplay * 100) + '%'}</td>
+                    <td>${Math.round(item.nwin / item.nplay * 100) + '%'}</td>
+                    <td>${item.ptime}</td>
+                `;
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    console.error('데이터를 가져오는 중 오류 발생:', xhr.statusText);
+                }
+            };
+            xhr.onerror = function () {
+                console.error('요청 중 오류 발생');
+            };
+            xhr.send();
+        }
+
+        function imgtri(m) { if (document.getElementById('b' + m).disabled == false) { trigged(m) } }
+        function trigged(b) {
+            n++
+            if (document.getElementById('name').value.replace(/\s+/g, '') === "" || document.getElementById('name').value.replace(/\s+/g, '') === "TOTAL") {
+                alert("학번과 이름을 입력해주세요");
+                document.getElementById('name').focus();
+            } else {
+                localStorage.setItem('savedname', document.getElementById('name').value.replace(/\s+/g, ''));
+                if (n == 1) {
+                    document.getElementById("prompt").innerHTML = (b + 1) + "번 문을 선택하셨습니다. 염소 있는곳 보여드림";
+                    goatg = [0, 1, 2].filter(item => item !== c)
+                    if (goatg.includes(b) == true) {
+                        document.getElementById('p' + goatg.filter(item => item !== b)).src = initTheme + ".goat.webp";
+                        document.getElementById('b' + goatg.filter(item => item !== b)).disabled = true;
+                    } else if (goatg.includes(b) == false) {
+                        vv = Math.floor(Math.random() * 2);
+                        document.getElementById('p' + (goatg[vv])).src = initTheme + ".goat.webp";
+                        document.getElementById('b' + (goatg[vv])).disabled = true;
+                    }
+                    b_ = b
+                } else if (n == 2) {
+                    fetchData()
+                    switch (true) {
+                        case (b == c && b != b_): // 바꾸고 이김
+                            document.getElementById('p' + b).src = initTheme + ".car.webp";
+                            document.getElementById("prompt").innerHTML = "축하합니다! 냉큼 사탕받으로 1-6으로 ㄱㄱ"
+                            playAudio('cor.mp3');
+                            updateOrAddScore(0);
+                            break;
+                        case (b == c && b == b_): // 안 바꾸고 이김
+                            document.getElementById('p' + b).src = initTheme + ".car.webp";
+                            document.getElementById("prompt").innerHTML = "축하합니다! 냉큼 사탕받으로 1-6으로 ㄱㄱ"
+                            playAudio('cor.mp3');
+                            updateOrAddScore(3);
+                            break;
+                        case (b != c && b == b_): // 안 바꾸고 짐
+                            updateOrAddScore(2);
+                            document.getElementById('p' + b).src = initTheme + ".goat.webp";
+                            document.getElementById("prompt").innerHTML = "아숩노ㅋ 한번더 ㄱ?"
+                            playAudio('inc.mp3')
+                            break;
+                        case (b != c && b != b_): // 바꾸고 짐
+                            document.getElementById('p' + b).src = initTheme + ".goat.webp";
+                            document.getElementById("prompt").innerHTML = "아숩노ㅋ 한번더 ㄱ?"
+                            playAudio('inc.mp3')
+                            updateOrAddScore(1);
+                            break;
+
+                    }
+                } else if (n <= 3) {
+                    reset()
+                }
+            }
+        }
+        fetchData();
+
+        if (localStorage.getItem('savedname') !== null) {
+            document.getElementById('name').value = localStorage.getItem('savedname');
+        }
+
+        function playAudio(file) {
+            new Audio(file).play();
+        }
+
+        function updateOrAddScore(h) {
+
+            const username = document.getElementById('name').value.replace(/\s+/g, '');
+
+            async function saveData(leaderboardData) {
+                try {
+                    const response = await fetch('/save', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(leaderboardData)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('데이터 저장 실패');
+                    }
+                } catch (error) {
+                    console.error('서버 오류:', error);
+                }
+            }
+
+            fetch('/data')
+                .then(response => response.json())
+                .then(leaderboardData => {
+                    const entry = leaderboardData.find(item => item.name === username);
+                    const tentry = leaderboardData.find(item => item.total === 1);
+                    if (entry) {
+                        //업데이트
+                        tentry.totalcount++;
+                        entry.totalcount++;
+                        entry.ptime = new Date().toISOString().slice(5, 19).replace('T', ' ');
+                        switch (h) {
+                            case 0://바꾸고 이김
+                                entry.cplay++;
+                                entry.cwin++;
+                                tentry.cplay++;
+                                tentry.cwin++;
+                                break;
+                            case 1: //바꾸고 짐
+                                entry.cplay++;
+                                tentry.cplay++;
+                                break;
+                            case 2://안바꾸고 이김
+                                entry.nplay++;
+                                entry.nwin++;
+                                tentry.nplay++;
+                                tentry.nwin++;
+                                break;
+                            case 3://안바꾸고 짐
+                                entry.nplay++;
+                                tentry.nplay++;
+                                break;
+                        }
+                    } else {
+                        //새로만들기
+                        leaderboardData.push({
+                            name: username,
+                            totalcount: 1,
+                            nwin: 0,
+                            cwin: 0,
+                            nplay: 0,
+                            cplay: 0,
+                            ptime: new Date().toISOString().slice(5, 19).replace('T', ' ')
+                        });
+                    }
+                    saveData(leaderboardData);
+                })
+                .catch(err => {
+                    console.error('파일 읽기 오류:', err);
+                });
+        }
+    </script>
+</body>
+
+</html>
