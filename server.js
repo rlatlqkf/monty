@@ -76,6 +76,36 @@ app.post('/save', async (req, res) => {
     }
 });
 
+async function initializeDatabase() {
+    try {
+      await client.connect();
+      const createTableQuery = `
+        CREATE TABLE IF NOT EXISTS leaderboard (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(50) NOT NULL,
+          totalcount INTEGER DEFAULT 0,
+          cwin INTEGER DEFAULT 0,
+          nwin INTEGER DEFAULT 0,
+          ptime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+      await client.query(createTableQuery);
+      console.log("leaderboard 테이블이 초기화되었습니다.");
+      return { success: true, message: "Database initialized successfully" };
+    } catch (error) {
+      console.error("데이터베이스 초기화 중 오류 발생:", error);
+      return { success: false, message: "Database initialization failed" };
+    } finally {
+      await client.end();
+    }
+  }
+  
+  // /resetsql 경로 라우트
+  app.get('/resetsql', async (req, res) => {
+    const result = await initializeDatabase();
+    res.json(result);
+  });
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
