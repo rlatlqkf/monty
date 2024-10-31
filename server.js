@@ -15,7 +15,7 @@ const pool = new Pool({
 const createTableQuery = `
 CREATE TABLE IF NOT EXISTS leaderboard (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE, -- 고유 제약 조건 추가
+    name VARCHAR(255) NOT NULL UNIQUE,
     totalcount INT DEFAULT 0,
     cwin INT DEFAULT 0,
     nwin INT DEFAULT 0,
@@ -41,16 +41,16 @@ app.put('/save', async (req, res) => {
     const { name, totalcount, cwin, nwin, ptime } = req.body;
 
     // ptime이 주어지지 않았다면 현재 시간을 사용
-    const ptimeValue = new Date().toISOString();
+    const ptimeValue = ptime ? new Date(ptime).toISOString() : new Date().toISOString();
 
     const updateQuery = `
         INSERT INTO leaderboard (name, totalcount, cwin, nwin, ptime)
         VALUES ($1, $2, $3, $4, $5)
         ON CONFLICT (name) DO UPDATE SET 
-            totalcount = excluded.totalcount,
-            cwin = excluded.cwin,
-            nwin = excluded.nwin,
-            ptime = excluded.ptime
+            totalcount = EXCLUDED.totalcount,
+            cwin = EXCLUDED.cwin,
+            nwin = EXCLUDED.nwin,
+            ptime = EXCLUDED.ptime
     `;
 
     try {
