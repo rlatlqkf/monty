@@ -206,11 +206,8 @@
                     t_cwin += item.cwin;
                     t_nplay += item.nplay;
                     t_cplay += item.cplay;
+                    t_count += item.totalcount
                 });
-
-                // 마지막 쉼표와 공백 제거
-                nameList = nameList.slice(0, -2);
-
                 // 누적 값 출력
                 document.getElementById('totalStats').innerHTML = `
             <p>총 플레이 수 : ${t_count}</p>
