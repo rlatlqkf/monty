@@ -15,7 +15,7 @@ const pool = new Pool({
 const createTableQuery = `
 CREATE TABLE IF NOT EXISTS leaderboard (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE, -- 고유 제약 조건 추가
     totalcount INT DEFAULT 0,
     cwin INT DEFAULT 0,
     nwin INT DEFAULT 0,
@@ -39,24 +39,29 @@ app.get('/data', async (req, res) => {
 
 app.put('/save', async (req, res) => {
     const { name, totalcount, cwin, nwin, ptime } = req.body;
+
+    // ptime이 주어지지 않았다면 현재 시간을 사용
+    const ptimeValue = ptime ? new Date(ptime).toISOString() : new Date().toISOString();
+
     const updateQuery = `
         INSERT INTO leaderboard (name, totalcount, cwin, nwin, ptime)
         VALUES ($1, $2, $3, $4, $5)
-        ON CONFLICT (name)
-        DO UPDATE SET 
-            totalcount = EXCLUDED.totalcount,
-            cwin = EXCLUDED.cwin,
-            nwin = EXCLUDED.nwin,
-            ptime = EXCLUDED.ptime
+        ON CONFLICT (name) DO UPDATE SET 
+            totalcount = excluded.totalcount,
+            cwin = excluded.cwin,
+            nwin = excluded.nwin,
+            ptime = excluded.ptime
     `;
+
     try {
-        await pool.query(updateQuery, [name, totalcount, cwin, nwin, ptime]);
+        await pool.query(updateQuery, [name, totalcount, cwin, nwin, ptimeValue]);
         res.status(200).json({ success: true });
     } catch (error) {
-        console.error("Data update error:", error);  // 오류 로그 추가
+        console.error("Data update error:", error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
+
 // initializeDatabase 함수 수정
 async function initializeDatabase() {
     try {
