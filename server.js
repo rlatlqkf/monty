@@ -9,16 +9,23 @@ const PORT = 3000;
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from the public directory
 
+// 데이터 가져오기
 app.get('/data', (req, res) => {
     fs.readFile('./data.json', 'utf8', (err, data) => {
         if (err) {
             console.error(err);
             return res.status(500).send('Error reading data');
         }
-        res.json(JSON.parse(data));
+        try {
+            res.json(JSON.parse(data));
+        } catch (parseError) {
+            console.error(parseError);
+            return res.status(500).send('Error parsing data');
+        }
     });
 });
 
+// 데이터 저장하기 (POST)
 app.post('/data', (req, res) => {
     const { name, win } = req.body;
     const ptime = new Date().toISOString(); // Save the current date and time
@@ -29,7 +36,7 @@ app.post('/data', (req, res) => {
             return res.status(500).send('Error reading data');
         }
         
-        let records = JSON.parse(data);
+        let records = JSON.parse(data || '[]'); // Initialize records as empty array if data is empty
         let record = records.find(r => r.name === name);
 
         if (!record) {
@@ -65,6 +72,38 @@ app.post('/data', (req, res) => {
     });
 });
 
+// 데이터 업데이트하기 (PUT)
+app.put('/save', (req, res) => {
+    const updatedRecord = req.body;
+
+    fs.readFile('./data.json', 'utf8', (err, data) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Error reading data');
+        }
+        
+        let records = JSON.parse(data || '[]'); // Initialize records as empty array if data is empty
+        let recordIndex = records.findIndex(r => r.name === updatedRecord.name);
+
+        if (recordIndex === -1) {
+            // 신규 기록 추가
+            records.push(updatedRecord);
+        } else {
+            // 기존 기록 업데이트
+            records[recordIndex] = updatedRecord;
+        }
+
+        fs.writeFile('./data.json', JSON.stringify(records, null, 2), (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Error saving updated data');
+            }
+            res.status(200).send('Data updated successfully');
+        });
+    });
+});
+
+// 서버 시작
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
