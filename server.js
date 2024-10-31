@@ -11,7 +11,7 @@ app.use(express.static(path.join(__dirname, 'public'))); // Update the path to y
 
 // PostgreSQL 연결 설정 (Koyeb의 PostgreSQL URI와 맞춰 수정)
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || "postgres://koyeb-adm:V8TYM6OkoxLS@ep-morning-river-a136vtvj.ap-southeast-1.pg.koyeb.app/koyebdb", // Koyeb 환경 변수 사용
+    connectionString: process.env.DATABASE_URL || "postgres://koyeb-adm:iGo7kJE0ryOK@ep-delicate-sky-a2ob1npy.eu-central-1.pg.koyeb.app/koyebdb", // Koyeb 환경 변수 사용
     ssl: { rejectUnauthorized: false }
 });
 

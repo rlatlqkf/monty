@@ -20,7 +20,7 @@
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
     <meta name="theme-color" content="#ffffff">
-    <meta name="viewport" content="initial-scale=1.0; maximum-scale=1.0; minimum-scale=1.0; user-scalable=no;" />
+    <meta name="viewport" content="initial-scale=1.0; maximum-scale=1.0; minimum-scale=1.0; user-scalable=no;">
     <title>나이스</title>
     <style>
         @font-face {
@@ -245,7 +245,6 @@
                             break;
 
                     }
-                    fetchDataAndCalculateTotalCount()
                 } else if (n <= 3) {
                     reset()
                 }
@@ -297,18 +296,6 @@
                 console.error('데이터 업데이트 오류:', error);
             }
         }
-        async function fetchDataAndCalculateTotalCount() {
-            const response = await fetch('/data');
-            const data = await response.json();
-            const t_totalcount = data.reduce((sum, item) => sum + (item.totalcount || 0), 0);
-            const t_cwin = data.reduce((sum, item) => sum + (item.cwin || 0), 0);
-            const t_nwin = data.reduce((sum, item) => sum + (item.nwin || 0), 0);
-            document.getElementById('totalCountDisplay').innerText = `총 플레이 수: ${totalCount}&nbsp;평균적인 안 바꿨을때 승률: ${Math.round(t_cwin / t_totalcount * 100) + '%'}&nbsp;평균적인 바꿨을때 승률: ${Math.round(t_nwin / t_totalcount * 100) + '%'}`;
-        }
-
-        // 페이지 로드 시 데이터 가져오기 및 총합 계산
-        window.onload = fetchDataAndCalculateTotalCount;
     </script>
 </body>
-
 </html>
