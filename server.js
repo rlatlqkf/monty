@@ -19,8 +19,6 @@ CREATE TABLE IF NOT EXISTS leaderboard (
     totalcount INT DEFAULT 0,
     cwin INT DEFAULT 0,
     nwin INT DEFAULT 0,
-    cplay INT DEFAULT 0,
-    nplay INT DEFAULT 0,
     ptime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 `;
@@ -55,11 +53,10 @@ app.put('/save', async (req, res) => {
         await pool.query(updateQuery, [name, totalcount, cwin, nwin, ptime]);
         res.status(200).json({ success: true });
     } catch (error) {
-        console.error("Data update error:", error);
+        console.error("Data update error:", error);  // 오류 로그 추가
         res.status(500).json({ success: false, error: error.message });
     }
 });
-
 // initializeDatabase 함수 수정
 async function initializeDatabase() {
     try {

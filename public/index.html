@@ -272,13 +272,13 @@
                         totalcount: 1,
                         cwin: resultType === 0 ? 1 : 0,
                         nwin: resultType === 1 ? 1 : 0,
-                        ptime: new Date().toISOString().slice(5, 19).replace('T', ' ')
+                        ptime: new Date().toISOString().slice(0, 19).replace('T', ' ') // 수정된 부분
                     };
                     leaderboardData.push(entry);
                 } else {
                     // 기존 엔트리 수정
                     entry.totalcount += 1;
-                    entry.ptime = new Date().toISOString().slice(5, 19).replace('T', ' ');
+                    entry.ptime = new Date().toISOString().slice(0, 19).replace('T', ' '); // 수정된 부분
 
                     if (resultType === 0) {
                         entry.cwin += 1;  // 바꾸고 이김
