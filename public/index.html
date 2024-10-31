@@ -128,8 +128,9 @@
         <div id="result">
             <p id="finalResult"></p>
         </div>
-        <div id="savedResults" class="hidden">
+        <div id="savedResults">
             <h2 style="font-size: 5vw;">리더보드</h2>
+            <h1 id="totalStats" style="margin-top: 1vw; margin-bottom: 1vw;"></h1>
             <table id="data-table" style="font-size: 2.75vw;">
                 <thead>
                     <tr>
@@ -175,31 +176,42 @@
         async function fetchData() {
             const tableBody = document.querySelector('#data-table tbody');
             tableBody.innerHTML = '';
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', '/data', true);
-            xhr.onload = function () {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    const data = JSON.parse(xhr.responseText);
-                    data.forEach(item => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                    <td>${item.name}</td>
-                    <td>${item.totalcount}</td>
-                    <td>${Math.round(item.cwin / item.totalcount * 100) + '%'}</td>
-                    <td>${Math.round(item.nwin / item.totalcount * 100) + '%'}</td>
-                    <td>${item.ptime}</td>
+
+            try {
+                const response = await fetch('/data');
+                const data = await response.json();
+
+                // 누적 값 초기화
+                let t_nwin = 0;
+                let t_cwin = 0;
+                let t_count = 0;
+
+                // 각 항목을 테이블에 추가하고, 누적 값 계산
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.name}</td>
+                        <td>${item.totalcount}</td>
+                        <td>${Math.round(item.cwin / item.totalcount * 100) + '%'}</td>
+                        <td>${Math.round(item.nwin / item.totalcount * 100) + '%'}</td>
+                        <td>${item.ptime}</td>
+                    `;
+                    tableBody.appendChild(row);
+                    // 누적합 계산
+                    t_nwin += item.nwin;
+                    t_cwin += item.cwin;
+                    t_count += item.totalcount;
+                });
+                document.getElementById('totalStats').innerHTML = `
+                    <p>총 플레이 수 : ${t_count}</p>
+                    <p>바꿨을 때 승리 합계 : ${t_cwin}%</p>
+                    <p>안 바꿨을 때 승리 합계 : ${t_nwin}%</p>
                 `;
-                        tableBody.appendChild(row);
-                    });
-                } else {
-                    console.error('데이터를 가져오는 중 오류 발생:', xhr.statusText);
-                }
-            };
-            xhr.onerror = function () {
-                console.error('요청 중 오류 발생');
-            };
-            xhr.send();
+            } catch (error) {
+                console.error('데이터를 가져오는 중 오류 발생:', error);
+            }
         }
+
 
         function imgtri(m) { if (document.getElementById('b' + m).disabled == false) { trigged(m) } }
         function trigged(b) {
@@ -260,6 +272,8 @@
 
         async function updateOrAddScore(resultType) {
             const username = document.getElementById('name').value.replace(/\s+/g, '');
+            const currentTime = new Date().toISOString();  // 현재 시간을 ISO 형식으로 가져옴
+
             try {
                 const response = await fetch('/data');
                 const leaderboardData = await response.json();
@@ -272,19 +286,19 @@
                         totalcount: 1,
                         cwin: resultType === 0 ? 1 : 0,
                         nwin: resultType === 1 ? 1 : 0,
+                        ptime: currentTime
                     };
                     leaderboardData.push(entry);
                 } else {
-                    // 기존 엔트리 수정
                     entry.totalcount += 1;
                     if (resultType === 0) {
                         entry.cwin += 1;  // 바꾸고 이김
                     } else if (resultType === 1) {
                         entry.nwin += 1;  // 안 바꾸고 이김
                     }
+                    entry.ptime = currentTime;  // 갱신된 시간으로 업데이트
                 }
 
-                // 서버에 업데이트 요청 전송
                 await fetch('/save', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -295,6 +309,8 @@
                 console.error('데이터 업데이트 오류:', error);
             }
         }
+
     </script>
 </body>
+
 </html>
