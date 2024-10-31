@@ -195,8 +195,8 @@
                     row.innerHTML = `
                 <td>${item.name}</td>
                 <td>${item.totalcount}</td>
-                <td>${Math.round(item.cwin / item.totalcount * 100) + '%'}</td>
-                <td>${Math.round(item.nwin / item.totalcount * 100) + '%'}</td>
+                <td>${Math.round(item.cwin / item.cplay * 100) + '%'}</td>
+                <td>${Math.round(item.nwin / item.cplay * 100) + '%'}</td>
                 <td>${formattedTime}</td>
             `;
                     tableBody.appendChild(row);
@@ -204,7 +204,8 @@
                     // 누적합 계산
                     t_nwin += item.nwin;
                     t_cwin += item.cwin;
-                    t_count += item.totalcount;
+                    t_nplay += item.nplay;
+                    t_cplay += item.cplay;
                 });
 
                 // 마지막 쉼표와 공백 제거
@@ -213,8 +214,8 @@
                 // 누적 값 출력
                 document.getElementById('totalStats').innerHTML = `
             <p>총 플레이 수 : ${t_count}</p>
-            <p>바꿨을 때 승리 평균 : ${Math.round(t_cwin / t_count * 100) + '%'}</p>
-            <p>안 바꿨을 때 승리 평균 : ${Math.round(t_nwin / t_count * 100) + '%'}</p>
+            <p>바꿨을 때 승리 평균 : ${Math.round(t_cwin / t_cplay * 100) + '%'}</p>
+            <p>안 바꿨을 때 승리 평균 : ${Math.round(t_nwin / t_nplay * 100) + '%'}</p>
         `;
             } catch (error) {
                 console.error('데이터를 가져오는 중 오류 발생:', error);
