@@ -116,7 +116,7 @@
             <img onclick='imgtri(1)' id='p1'>
             <img onclick='imgtri(2)' id='p2'>
         </div>
-        <div style="width: 100%; height: 2vw; margin-bottom: 2vw;">
+        <div style="width: 100%; height: 2vw; margin-bottom: 3vw;">
             <h1 id="prompt">문을 하나 선택해주세요</h1>
         </div>
         <div class="btnd">
@@ -130,7 +130,6 @@
         </div>
         <div id="savedResults" class="hidden">
             <h2 style="font-size: 5vw;">리더보드</h2>
-            <h2 style="font-size: 3vw; margin-bottom: 1vw; margin-top: 1vw;" id="totalCountDisplay"></h2>
             <table id="data-table" style="font-size: 2.75vw;">
                 <thead>
                     <tr>
@@ -237,13 +236,12 @@
                             playAudio('cor.mp3');
                             updateOrAddScore(1);
                             break;
-                        case (b != c): // 안 바꾸고 짐
+                        case (b != c): // 짐
                             updateOrAddScore();
                             document.getElementById('p' + b).src = initTheme + ".goat.webp";
                             document.getElementById("prompt").innerHTML = "아숩노ㅋ 한번더 ㄱ?"
                             playAudio('inc.mp3')
                             break;
-
                     }
                 } else if (n <= 3) {
                     reset()
@@ -280,11 +278,10 @@
                     entry.totalcount++;
                     entry.ptime = new Date().toISOString().slice(5, 19).replace('T', ' ');
                 }
-
                 if (resultType === 0) {  // 바꾸고 이김
-                    entry.cwin++;
+                    entry.cwin++
                 } else if (resultType === 1) {  // 안바꾸고 이김
-                    entry.nwin++;
+                    entry.nwin++
                 }
 
                 await fetch('/save', {
