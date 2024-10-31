@@ -60,24 +60,15 @@ app.put('/save', async (req, res) => {
     }
 });
 
+// initializeDatabase 함수 수정
 async function initializeDatabase() {
-    const initQuery = `
-    CREATE TABLE IF NOT EXISTS leaderboard (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(50) NOT NULL,
-        totalcount INTEGER DEFAULT 0,
-        cwin INTEGER DEFAULT 0,
-        nwin INTEGER DEFAULT 0,
-        ptime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    `;
     try {
-        await pool.query(initQuery);
-        console.log("Leaderboard table initialized successfully");
-        return { success: true, message: "Database initialized successfully" };
+        await pool.query('DELETE FROM leaderboard'); // 테이블의 모든 데이터 삭제
+        console.log("leaderboard 테이블의 모든 데이터가 삭제되었습니다.");
+        return { success: true, message: "Database reset successfully" };
     } catch (error) {
-        console.error("Database initialization error:", error);
-        return { success: false, message: "Database initialization failed" };
+        console.error("데이터베이스 초기화 중 오류 발생:", error);
+        return { success: false, message: "Database reset failed" };
     }
 }
 
