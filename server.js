@@ -12,6 +12,7 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
+// 테이블 생성 쿼리 수정: name 열에 UNIQUE 제약 조건 추가
 const createTableQuery = `
 CREATE TABLE IF NOT EXISTS leaderboard (
     id SERIAL PRIMARY KEY,
@@ -39,22 +40,18 @@ app.get('/data', async (req, res) => {
 
 app.put('/save', async (req, res) => {
     const { name, totalcount, cwin, nwin, ptime } = req.body;
-
-    // ptime이 주어지지 않았다면 현재 시간을 사용
-    const ptimeValue = ptime ? new Date(ptime).toISOString() : new Date().toISOString();
-
     const updateQuery = `
         INSERT INTO leaderboard (name, totalcount, cwin, nwin, ptime)
         VALUES ($1, $2, $3, $4, $5)
-        ON CONFLICT (name) DO UPDATE SET 
+        ON CONFLICT (name)
+        DO UPDATE SET 
             totalcount = EXCLUDED.totalcount,
             cwin = EXCLUDED.cwin,
             nwin = EXCLUDED.nwin,
             ptime = EXCLUDED.ptime
     `;
-
     try {
-        await pool.query(updateQuery, [name, totalcount, cwin, nwin, ptimeValue]);
+        await pool.query(updateQuery, [name, totalcount, cwin, nwin, ptime]);
         res.status(200).json({ success: true });
     } catch (error) {
         console.error("Data update error:", error);
@@ -65,8 +62,9 @@ app.put('/save', async (req, res) => {
 // initializeDatabase 함수 수정
 async function initializeDatabase() {
     try {
-        await pool.query('DELETE FROM leaderboard'); // 테이블의 모든 데이터 삭제
-        console.log("leaderboard 테이블의 모든 데이터가 삭제되었습니다.");
+        await pool.query('DROP TABLE IF EXISTS leaderboard'); // 기존 테이블 삭제
+        await pool.query(createTableQuery); // 테이블 재생성
+        console.log("leaderboard 테이블이 초기화되었습니다.");
         return { success: true, message: "Database reset successfully" };
     } catch (error) {
         console.error("데이터베이스 초기화 중 오류 발생:", error);
