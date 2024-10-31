@@ -42,7 +42,7 @@ app.get('/data', (req, res) => {
 
 // PUT 요청을 통해 JSON 파일에 데이터를 추가하거나 업데이트
 app.put('/save', (req, res) => {
-    const { name, totalcount, cwin, nwin, ptime } = req.body;
+    const { name, totalcount, cwin, nwin, cplay, nplay, ptime } = req.body;
     let data = loadData();
 
     // 사용자의 데이터가 이미 있는지 확인 후 갱신 또는 추가
@@ -52,10 +52,12 @@ app.put('/save', (req, res) => {
         entry.totalcount = totalcount;
         entry.cwin = cwin;
         entry.nwin = nwin;
+        entry.cplay = cplay;
+        entry.nplay = nplay;
         entry.ptime = ptime;
     } else {
         // 새 엔트리 추가
-        entry = { name, totalcount, cwin, nwin, ptime };
+        entry = { name, totalcount, cwin, nwin, cplay, nplay, ptime };
         data.push(entry);
     }
 
