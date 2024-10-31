@@ -196,7 +196,7 @@
                 <td>${item.name}</td>
                 <td>${item.totalcount}</td>
                 <td>${Math.round(item.cwin / item.cplay * 100) + '%'}</td>
-                <td>${Math.round(item.nwin / item.cplay * 100) + '%'}</td>
+                <td>${Math.round(item.nwin / item.nplay * 100) + '%'}</td>
                 <td>${formattedTime}</td>
             `;
                     tableBody.appendChild(row);
@@ -309,8 +309,10 @@
                         totalcount: 1,
                         cwin: resultType === 0 ? 1 : 0,
                         nwin: resultType === 1 ? 1 : 0,
-                        cwin: resultType === 0||2 ? 1 : 0,
-                        nwin: resultType === 1||3 ? 1 : 0,
+                        cwin: resultType === 0 ? 1 : 0,
+                        cwin: resultType === 2 ? 1 : 0,
+                        nwin: resultType === 1 ? 1 : 0,
+                        nwin: resultType === 3 ? 1 : 0,
                         ptime: currentTime
                     };
                     leaderboardData.push(entry);
