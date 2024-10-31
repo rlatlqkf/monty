@@ -1,77 +1,70 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from the public directory
 
-const dataFilePath = path.join(__dirname, 'data.json');
-
-// JSON 파일이 존재하지 않을 경우 기본 템플릿을 생성
-if (!fs.existsSync(dataFilePath)) {
-    fs.writeFileSync(dataFilePath, JSON.stringify([]), 'utf8');
-}
-
-// 데이터를 불러오는 함수
-function loadData() {
-    try {
-        const data = fs.readFileSync(dataFilePath, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        console.error("Error loading data:", error);
-        return [];
-    }
-}
-
-// 데이터를 저장하는 함수
-function saveData(data) {
-    try {
-        fs.writeFileSync(dataFilePath, JSON.stringify(data), 'utf8');
-    } catch (error) {
-        console.error("Error saving data:", error);
-    }
-}
-
-// GET 요청에 대한 데이터 응답 처리
 app.get('/data', (req, res) => {
-    const data = loadData();
-    res.json(data);
+    fs.readFile('./data.json', 'utf8', (err, data) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Error reading data');
+        }
+        res.json(JSON.parse(data));
+    });
 });
 
-// PUT 요청을 통해 JSON 파일에 데이터를 추가하거나 업데이트
-app.put('/save', (req, res) => {
-    const { name, totalcount, cwin, nwin, cplay, nplay, ptime } = req.body;
-    let data = loadData();
+app.post('/data', (req, res) => {
+    const { name, win } = req.body;
+    const ptime = new Date().toISOString(); // Save the current date and time
 
-    // 사용자의 데이터가 이미 있는지 확인 후 갱신 또는 추가
-    let entry = data.find(item => item.name === name);
-    if (entry) {
-        // 기존 엔트리 업데이트
-        entry.totalcount = totalcount;
-        entry.cwin = cwin;
-        entry.nwin = nwin;
-        entry.cplay = cplay;
-        entry.nplay = nplay;
-        entry.ptime = ptime;
-    } else {
-        // 새 엔트리 추가
-        entry = { name, totalcount, cwin, nwin, cplay, nplay, ptime };
-        data.push(entry);
-    }
+    fs.readFile('./data.json', 'utf8', (err, data) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Error reading data');
+        }
+        
+        let records = JSON.parse(data);
+        let record = records.find(r => r.name === name);
 
-    saveData(data);
-    res.status(200).json({ success: true });
-});
+        if (!record) {
+            record = {
+                name: name,
+                totalcount: 1,
+                cwin: win ? 1 : 0,
+                cplay: win ? 1 : 0,
+                nwin: win ? 0 : 1,
+                nplay: win ? 0 : 1,
+                ptime: ptime
+            };
+            records.push(record);
+        } else {
+            record.totalcount += 1;
+            if (win) {
+                record.cwin += 1;
+                record.cplay += 1;
+            } else {
+                record.nwin += 1;
+                record.nplay += 1;
+            }
+            record.ptime = ptime; // Update time to latest
+        }
 
-// 데이터 초기화 라우트
-app.get('/resetsql', (req, res) => {
-    const initialData = [];
-    saveData(initialData);
-    res.json({ success: true, message: "Database reset successfully" });
+        fs.writeFile('./data.json', JSON.stringify(records, null, 2), (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Error saving data');
+            }
+            res.status(201).send('Data saved');
+        });
+    });
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server is running on http://localhost:${PORT}`);
 });

@@ -187,6 +187,7 @@
                 let t_cwin = 0;
                 let t_nplay = 0;
                 let t_cplay = 0;
+                let t_count = 0; // Initialize total play count
 
                 // 각 항목을 테이블에 추가하고, 누적 값 계산
                 data.forEach(item => {
@@ -211,138 +212,74 @@
                 // 누적 값 출력
                 document.getElementById('totalStats').innerHTML = `
             <p>총 플레이 수 : ${t_count}</p>
-            <p>바꿨을 때 승리 평균 : ${Math.round(t_cwin / t_cplay * 100) + '%'}</p>
-            <p>안 바꿨을 때 승리 평균 : ${Math.round(t_nwin / t_nplay * 100) + '%'}</p>
+            <p>바꿨을 때 승리 평균 : ${Math.round(t_cwin / (t_cplay || 1) * 100) + '%'}</p>
+            <p>안 바꿨을 때 승리 평균 : ${Math.round(t_nwin / (t_nplay || 1) * 100) + '%'}</p>
         `;
             } catch (error) {
-                console.error('데이터를 가져오는 중 오류 발생:', error);
+                console.error('Error fetching data:', error);
             }
         }
 
-        // 날짜를 "월-일 HH:MM:SS" 형식으로 포맷하는 함수
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            const month = String(date.getMonth() + 1).padStart(2, '0'); // 월은 0부터 시작하므로 +1
-            const day = String(date.getDate()).padStart(2, '0');
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            const seconds = String(date.getSeconds()).padStart(2, '0');
-
-            return `${month}-${day} ${hours}:${minutes}:${seconds}`;
+        function formatDate(ptime) {
+            const date = new Date(ptime);
+            return date.toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
         }
-        function imgtri(m) { if (document.getElementById('b' + m).disabled == false) { trigged(m) } }
-        function trigged(b) {
-            n++
-            if (document.getElementById('name').value.replace(/\s+/g, '') === "" || document.getElementById('name').value.replace(/\s+/g, '') === "TOTAL") {
-                alert("학번과 이름을 입력해주세요");
-                document.getElementById('name').focus();
+
+        function imgtri(x) {
+            document.getElementById('p' + x).src = initTheme + ".open.webp";
+            n++;
+            document.getElementById('prompt').innerHTML = '다른 문으로 바꿔주세요';
+            document.getElementById('b0').disabled = true;
+            document.getElementById('b1').disabled = true;
+            document.getElementById('b2').disabled = true;
+        }
+
+        function trigged(x) {
+            let t = false;
+            if (x == c) {
+                t = true;
+            }
+            document.getElementById('b' + x).style.backgroundColor = "green";
+            if (t) {
+                document.getElementById('finalResult').innerHTML = "이겼습니다! 냉큼 사탕받으러 오세요";
+                win(t);
             } else {
-                localStorage.setItem('savedname', document.getElementById('name').value.replace(/\s+/g, ''));
-                if (n == 1) {
-                    document.getElementById("prompt").innerHTML = (b + 1) + "번 문을 선택하셨습니다. 염소 있는곳 보여드림";
-                    goatg = [0, 1, 2].filter(item => item !== c)
-                    if (goatg.includes(b) == true) {
-                        document.getElementById('p' + goatg.filter(item => item !== b)).src = initTheme + ".goat.webp";
-                        document.getElementById('b' + goatg.filter(item => item !== b)).disabled = true;
-                    } else if (goatg.includes(b) == false) {
-                        tlqkf = Math.floor(Math.random() * 2);
-                        document.getElementById('p' + (goatg[tlqkf])).src = initTheme + ".goat.webp";
-                        document.getElementById('b' + (goatg[tlqkf])).disabled = true;
-                    }
-                    b_ = b
-                } else if (n == 2) {
-                    fetchData()
-                    switch (true) {
-                        case (b == c && b != b_): // 바꾸고 이김
-                            document.getElementById('p' + b).src = initTheme + ".car.webp";
-                            document.getElementById("prompt").innerHTML = "축하합니다! 냉큼 사탕받으로 1-6으로 ㄱㄱ"
-                            playAudio('cor.mp3');
-                            updateOrAddScore(0);
-                            break;
-                        case (b == c && b == b_): // 안 바꾸고 이김
-                            document.getElementById('p' + b).src = initTheme + ".car.webp";
-                            document.getElementById("prompt").innerHTML = "축하합니다! 냉큼 사탕받으로 1-6으로 ㄱㄱ"
-                            playAudio('cor.mp3');
-                            updateOrAddScore(1);
-                            break;
-                        case (b != c && b != b_): // 바꾸고 짐
-                            updateOrAddScore(2);
-                            document.getElementById('p' + b).src = initTheme + ".goat.webp";
-                            document.getElementById("prompt").innerHTML = "아숩노ㅋ 한번더 ㄱ?"
-                            playAudio('inc.mp3')
-                            break;
-                        case (b != c && b == b_): // 안 바꾸고 짐
-                            updateOrAddScore(3);
-                            document.getElementById('p' + b).src = initTheme + ".goat.webp";
-                            document.getElementById("prompt").innerHTML = "아숩노ㅋ 한번더 ㄱ?"
-                            playAudio('inc.mp3')
-                            break;
-                    }
-                } else if (n <= 3) {
-                    reset()
-                }
+                document.getElementById('finalResult').innerHTML = "아쉽노ㅋ 한번 더 ㄱ?";
+                win(t);
             }
+            // Disable buttons
+            document.getElementById('b0').disabled = true;
+            document.getElementById('b1').disabled = true;
+            document.getElementById('b2').disabled = true;
+            reset();
+            setTimeout(() => {
+                reset();
+            }, 5000);
         }
-        fetchData();
 
-        if (localStorage.getItem('savedname') !== null) {
-            document.getElementById('name').value = localStorage.getItem('savedname');
-        }
-
-        function playAudio(file) {
-            new Audio(file).play();
-        }
-
-        async function updateOrAddScore(resultType) {
-            const username = document.getElementById('name').value.replace(/\s+/g, '');
-            const currentTime = new Date().toISOString();  // 현재 시간을 ISO 형식으로 가져옴
-
-            try {
-                const response = await fetch('/data');
-                const leaderboardData = await response.json();
-
-                let entry = leaderboardData.find(item => item.name === username);
-
-                if (!entry) {
-                    entry = {
-                        name: username,
-                        totalcount: 1,
-                        cwin: resultType === 0 ? 1 : 0,
-                        nwin: resultType === 1 ? 1 : 0,
-                        cwin: resultType === 0 ? 1 : 0,
-                        cwin: resultType === 2 ? 1 : 0,
-                        nwin: resultType === 1 ? 1 : 0,
-                        nwin: resultType === 3 ? 1 : 0,
-                        ptime: currentTime
-                    };
-                    leaderboardData.push(entry);
-                } else {
-                    entry.totalcount += 1;
-                    if (resultType === 0) {
-                        entry.cwin += 1;  // 바꾸고 이김
-                        entry.cplay += 1;
-                    } else if (resultType === 1) {
-                        entry.nwin += 1;  // 안 바꾸고 이김
-                        entry.nplay += 1;
-                    } else if (resultType === 2) {
-                        entry.cplay += 1;
-                    } else if (resultType === 3) {
-                        entry.nplay += 1;
-                    }
-                    entry.ptime = currentTime;  // 갱신된 시간으로 업데이트
-                }
-
-                await fetch('/save', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(entry)
+        async function win(t) {
+            let name = document.getElementById('name').value;
+            if (name) {
+                let response = await fetch('/data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        win: t
+                    })
                 });
-
-            } catch (error) {
-                console.error('데이터 업데이트 오류:', error);
+                await fetchData();
             }
         }
-
     </script>
 </body>
 </html>
