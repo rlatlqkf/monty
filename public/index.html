@@ -68,8 +68,8 @@
         }
 
         img {
-            width: 32%;
-            height: 32%;
+            width: 25%;
+            height: 25%;
         }
 
         .btnd {
@@ -186,7 +186,7 @@
                     <td>${item.name}</td>
                     <td>${item.totalcount}</td>
                     <td>${Math.round(item.cwin / item.totalcount * 100) + '%'}</td>
-                    <td>${Math.round(item.nwin / item.toIalcount * 100) + '%'}</td>
+                    <td>${Math.round(item.nwin / item.totalcount * 100) + '%'}</td>
                     <td>${item.ptime}</td>
                 `;
                         tableBody.appendChild(row);
@@ -216,9 +216,9 @@
                         document.getElementById('p' + goatg.filter(item => item !== b)).src = initTheme + ".goat.webp";
                         document.getElementById('b' + goatg.filter(item => item !== b)).disabled = true;
                     } else if (goatg.includes(b) == false) {
-                        vv = Math.floor(Math.random() * 2);
-                        document.getElementById('p' + (goatg[vv])).src = initTheme + ".goat.webp";
-                        document.getElementById('b' + (goatg[vv])).disabled = true;
+                        tlqkf = Math.floor(Math.random() * 2);
+                        document.getElementById('p' + (goatg[tlqkf])).src = initTheme + ".goat.webp";
+                        document.getElementById('b' + (goatg[tlqkf])).disabled = true;
                     }
                     b_ = b
                 } else if (n == 2) {
@@ -263,36 +263,54 @@
             try {
                 const response = await fetch('/data');
                 const leaderboardData = await response.json();
+
                 let entry = leaderboardData.find(item => item.name === username);
 
                 if (!entry) {
                     entry = {
                         name: username,
                         totalcount: 1,
-                        cwin: 0,
-                        nwin: 0,
+                        cwin: resultType === 0 ? 1 : 0,
+                        nwin: resultType === 1 ? 1 : 0,
                         ptime: new Date().toISOString().slice(5, 19).replace('T', ' ')
                     };
                     leaderboardData.push(entry);
                 } else {
-                    entry.totalcount++;
+                    // 기존 엔트리 수정
+                    entry.totalcount += 1;
                     entry.ptime = new Date().toISOString().slice(5, 19).replace('T', ' ');
-                }
-                if (resultType === 0) {  // 바꾸고 이김
-                    entry.cwin++
-                } else if (resultType === 1) {  // 안바꾸고 이김
-                    entry.nwin++
+
+                    if (resultType === 0) {
+                        entry.cwin += 1;  // 바꾸고 이김
+                    } else if (resultType === 1) {
+                        entry.nwin += 1;  // 안 바꾸고 이김
+                    }
                 }
 
+                // 서버에 업데이트 요청 전송
                 await fetch('/save', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(entry) // 여기서 entry를 보내야 함
-            });
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(entry)
+                });
+
             } catch (error) {
                 console.error('데이터 업데이트 오류:', error);
             }
         }
+
+        // 서버에 엔트리 업데이트 요청 보내기
+        await fetch('/save', {
+            method: 'PUT', // PUT을 사용하여 엔트리 업데이트
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(entry)
+        });
+
+            } catch (error) {
+            console.error('데이터 업데이트 오류:', error);
+            }
+
     </script>
 </body>
+
 </html>
