@@ -41,7 +41,7 @@ app.put('/save', async (req, res) => {
     const { name, totalcount, cwin, nwin, ptime } = req.body;
 
     // ptime이 주어지지 않았다면 현재 시간을 사용
-    const ptimeValue = ptime ? new Date(ptime).toISOString() : new Date().toISOString();
+    const ptimeValue = new Date().toISOString();
 
     const updateQuery = `
         INSERT INTO leaderboard (name, totalcount, cwin, nwin, ptime)
